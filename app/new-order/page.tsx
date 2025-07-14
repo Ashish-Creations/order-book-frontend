@@ -30,83 +30,92 @@ const stageFields = [
     name: "Inquiry",
     fields: [
       { name: "companyName", label: "Company Name", type: "text", required: true },
-      { name: "contactPerson", label: "Contact Person", type: "text", required: true },
-      { name: "inquiryDetails", label: "Inquiry Details", type: "textarea", required: true },
+      { name: "contactPerson", label: "Contact Person", type: "text", required: false },
+      { name: "inquiryDetails", label: "Inquiry Details", type: "textarea", required: false },
     ],
   },
   {
     stage: 2,
     name: "Requirements Analysis",
     fields: [
-      { name: "functionalRequirements", label: "Functional Requirements", type: "textarea", required: true },
-      { name: "technicalRequirements", label: "Technical Requirements", type: "textarea", required: true },
-      { name: "timeline", label: "Expected Timeline", type: "text", required: true },
+      { name: "functionalRequirements", label: "Functional Requirements", type: "textarea", required: false },
+      { name: "technicalRequirements", label: "Technical Requirements", type: "textarea", required: false },
+      { name: "timeline", label: "Expected Timeline", type: "text", required: false },
     ],
   },
   {
     stage: 3,
     name: "Proposal",
     fields: [
-      { name: "proposalDocument", label: "Proposal Document", type: "file", required: true },
-      { name: "estimatedCost", label: "Estimated Cost", type: "number", required: true },
-      { name: "deliverables", label: "Key Deliverables", type: "textarea", required: true },
+      { name: "proposalDocument", label: "Proposal Document", type: "file", required: false },
+      { name: "estimatedCost", label: "Estimated Cost", type: "number", required: false },
+      { name: "deliverables", label: "Key Deliverables", type: "textarea", required: false },
     ],
   },
   {
     stage: 4,
     name: "Contract Review",
     fields: [
-      { name: "contractTerms", label: "Contract Terms", type: "textarea", required: true },
-      { name: "legalReview", label: "Legal Review Status", type: "text", required: true },
-      { name: "signedContract", label: "Signed Contract", type: "file", required: true },
+      { name: "contractTerms", label: "Contract Terms", type: "textarea", required: false },
+      { name: "legalReview", label: "Legal Review Status", type: "text", required: false },
+      { name: "signedContract", label: "Signed Contract", type: "file", required: false },
     ],
   },
   {
     stage: 5,
     name: "Development Planning",
     fields: [
-      { name: "projectPlan", label: "Project Plan", type: "file", required: true },
-      { name: "resourceAllocation", label: "Resource Allocation", type: "textarea", required: true },
-      { name: "milestones", label: "Key Milestones", type: "textarea", required: true },
+      { name: "projectPlan", label: "Project Plan", type: "file", required: false },
+      { name: "resourceAllocation", label: "Resource Allocation", type: "textarea", required: false },
+      { name: "milestones", label: "Key Milestones", type: "textarea", required: false },
     ],
   },
   {
     stage: 6,
     name: "Implementation",
     fields: [
-      { name: "developmentProgress", label: "Development Progress", type: "textarea", required: true },
-      { name: "codeRepository", label: "Code Repository Link", type: "text", required: true },
-      { name: "weeklyReports", label: "Weekly Progress Reports", type: "file", required: true },
+      { name: "developmentProgress", label: "Development Progress", type: "textarea", required: false },
+      { name: "codeRepository", label: "Code Repository Link", type: "text", required: false },
+      { name: "weeklyReports", label: "Weekly Progress Reports", type: "file", required: false },
     ],
   },
   {
     stage: 7,
     name: "Testing",
     fields: [
-      { name: "testPlan", label: "Test Plan", type: "file", required: true },
-      { name: "testResults", label: "Test Results", type: "textarea", required: true },
-      { name: "bugReports", label: "Bug Reports", type: "file", required: true },
+      { name: "testPlan", label: "Test Plan", type: "file", required: false },
+      { name: "testResults", label: "Test Results", type: "textarea", required: false },
+      { name: "bugReports", label: "Bug Reports", type: "file", required: false },
     ],
   },
   {
     stage: 8,
     name: "Deployment",
     fields: [
-      { name: "deploymentPlan", label: "Deployment Plan", type: "file", required: true },
-      { name: "productionUrl", label: "Production URL", type: "text", required: true },
-      { name: "deploymentNotes", label: "Deployment Notes", type: "textarea", required: true },
+      { name: "deploymentPlan", label: "Deployment Plan", type: "file", required: false },
+      { name: "productionUrl", label: "Production URL", type: "text", required: false },
+      { name: "deploymentNotes", label: "Deployment Notes", type: "textarea", required: false },
     ],
   },
   {
     stage: 9,
     name: "Completion",
     fields: [
-      { name: "finalDeliverables", label: "Final Deliverables", type: "file", required: true },
-      { name: "clientFeedback", label: "Client Feedback", type: "textarea", required: true },
-      { name: "projectSummary", label: "Project Summary", type: "textarea", required: true },
+      { name: "finalDeliverables", label: "Final Deliverables", type: "file", required: false },
+      { name: "clientFeedback", label: "Client Feedback", type: "textarea", required: false },
+      { name: "projectSummary", label: "Project Summary", type: "textarea", required: false },
     ],
   },
-]
+].map(stage => ({
+  ...stage,
+  fields: stage.fields.map(field =>
+    stage.stage === 1 && field.name === "companyName"
+      ? field
+      : { ...field, required: false }
+  )
+}));
+
+const BACKEND_URL = "http://localhost:8080";
 
 export default function NewOrderPage() {
   const router = useRouter()
@@ -117,59 +126,73 @@ export default function NewOrderPage() {
   const [orderNumber, setOrderNumber] = useState("")
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [savedStages, setSavedStages] = useState<Set<number>>(new Set())
+  const [backendOrderId, setBackendOrderId] = useState(orderId || "");
 
   useEffect(() => {
-    // If we have an orderId, load the order data
-    if (orderId) {
-      // In a real app, this would be an API call to get the order data
-      // For this demo, we'll simulate loading from localStorage or use mock data
-
-      // Try to load from localStorage first (for orders created in this session)
-      const savedOrderData = localStorage.getItem(`order_${orderId}`)
-
-      if (savedOrderData) {
+    const loadOrderData = async () => {
+      if (orderId) {
         try {
-          const orderData = JSON.parse(savedOrderData)
-          setOrderNumber(orderData.orderNumber)
-          setCurrentStage(orderData.currentStage)
-          setFormData(orderData.formData || {})
-          setSavedStages(new Set(orderData.savedStages || []))
-        } catch (error) {
-          console.error("Error parsing saved order:", error)
+          // Load order data from backend API
+          const response = await fetch(`${BACKEND_URL}/orders/${orderId}`);
+          if (response.ok) {
+            const data = await response.json();
+            const order = data.order;
+            
+            // Set order number
+            setOrderNumber(order.orderNumber || `ORD-2024-${orderId.padStart(3, "0")}`);
+            setBackendOrderId(orderId);
+            
+            // Set current stage
+            setCurrentStage(order.currentStage || 1);
+            
+            // Load form data
+            if (order.formData) {
+              setFormData(order.formData);
+            }
+            
+            // Load saved stages
+            if (order.savedStages && Array.isArray(order.savedStages)) {
+              setSavedStages(new Set(order.savedStages));
+            }
+          } else {
+            console.error("Failed to load order data");
+            // Fallback to default values
+            setOrderNumber(`ORD-2024-${orderId.padStart(3, "0")}`);
+            setBackendOrderId(orderId);
+          }
+        } catch (err) {
+          console.error("Error loading order data:", err);
+          // Fallback to default values
+          setOrderNumber(`ORD-2024-${orderId.padStart(3, "0")}`);
+          setBackendOrderId(orderId);
         }
       } else {
-        // If not found in localStorage, use mock data (in a real app, this would be from an API)
-        // This simulates loading an order from the database
-        const mockOrderData = {
-          id: orderId,
-          orderNumber: `ORD-2024-${orderId.padStart(3, "0")}`,
-          currentStage: 4, // Example: order is at stage 4
-          formData: {
-            stage1_companyName: "Acme Corp",
-            stage1_contactPerson: "John Smith",
-            stage1_inquiryDetails: "Need a new website with e-commerce functionality",
-            stage2_functionalRequirements: "Product catalog, shopping cart, user accounts",
-            stage2_technicalRequirements: "React, Next.js, Stripe integration",
-            stage2_timeline: "3 months",
-            stage3_proposalDocument: "proposal.pdf",
-            stage3_estimatedCost: "25000",
-            stage3_deliverables: "Website, admin panel, payment integration",
-          },
-          savedStages: [1, 2, 3],
+        // If no orderId, this is a new order - get next order number from backend
+        try {
+          const response = await fetch(`${BACKEND_URL}/next-order-number`);
+          if (response.ok) {
+            const data = await response.json();
+            setOrderNumber(data.orderNumber);
+          } else {
+            // Fallback to timestamp-based number
+            const currentYear = new Date().getFullYear();
+            const timestamp = Date.now();
+            setOrderNumber(`${currentYear}-${timestamp.toString().slice(-4)}`);
+          }
+        } catch (err) {
+          console.error("Error getting next order number:", err);
+          // Fallback to timestamp-based number
+          const currentYear = new Date().getFullYear();
+          const timestamp = Date.now();
+          setOrderNumber(`${currentYear}-${timestamp.toString().slice(-4)}`);
         }
-
-        setOrderNumber(mockOrderData.orderNumber)
-        setCurrentStage(mockOrderData.currentStage)
-        setFormData(mockOrderData.formData)
-        setSavedStages(new Set(mockOrderData.savedStages))
       }
-    } else {
-      // If no orderId, this is a new order
-      setOrderNumber(`ORD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000) + 1).padStart(3, "0")}`)
-    }
 
-    setLoading(false)
-  }, [orderId])
+      setLoading(false);
+    };
+
+    loadOrderData();
+  }, [orderId]);
 
   const currentStageData = stageFields.find((s) => s.stage === currentStage)
   const progress = (currentStage / 9) * 100
@@ -181,23 +204,117 @@ export default function NewOrderPage() {
     }))
   }
 
-  const handleSaveAndExit = () => {
-    setSavedStages((prev) => new Set([...prev, currentStage]))
-    // In a real app, save to database/localStorage
-    localStorage.setItem(
-      `order_${orderNumber}`,
-      JSON.stringify({
-        orderNumber,
-        currentStage,
-        formData,
-        savedStages: Array.from(savedStages),
-      }),
-    )
-    router.push("/")
+  const createOrderInDatabase = async (companyName: string) => {
+    if (backendOrderId) return; // Order already exists
+    
+    const payload = {
+      orderId: orderNumber,
+      orderNumber: orderNumber,
+      companyName: companyName,
+      product: "",
+      currentStage: 1,
+      formData: { ...formData, [`stage${currentStage}_companyName`]: companyName },
+      savedStages: Array.from(savedStages),
+    };
+    
+    try {
+      const res = await fetch(`${BACKEND_URL}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setBackendOrderId(orderNumber);
+      }
+    } catch (err) {
+      console.error("Failed to create order:", err);
+    }
   }
 
-  const handleNextStage = () => {
+  const handleSaveAndExit = async (shouldRedirect = true) => {
     setSavedStages((prev) => new Set([...prev, currentStage]))
+    
+    // Create order if it doesn't exist and company name is filled
+    if (!backendOrderId && formData["stage1_companyName"]?.trim()) {
+      await createOrderInDatabase(formData["stage1_companyName"].trim());
+    }
+    
+    const payload = {
+      orderId: backendOrderId || orderNumber,
+      orderNumber: orderNumber,
+      companyName: formData["stage1_companyName"] || "",
+      product: formData["stage2_functionalRequirements"] || "",
+      currentStage,
+      formData,
+      savedStages: Array.from(savedStages),
+    };
+    try {
+      if (!backendOrderId) {
+        // Create new order
+        const res = await fetch(`${BACKEND_URL}/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setBackendOrderId(orderNumber);
+        }
+      } else {
+        // Update existing order
+        await fetch(`${BACKEND_URL}/orders/${backendOrderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+    } catch (err) {
+      // Optionally show error toast
+    }
+    
+    if (shouldRedirect) {
+      router.push("/");
+    }
+  }
+
+  const handleNextStage = async () => {
+    setSavedStages((prev) => new Set([...prev, currentStage]))
+    
+    // Create order if it doesn't exist and company name is filled
+    if (!backendOrderId && formData["stage1_companyName"]?.trim()) {
+      await createOrderInDatabase(formData["stage1_companyName"].trim());
+    }
+    
+    const payload = {
+      orderId: backendOrderId || orderNumber,
+      orderNumber: orderNumber,
+      companyName: formData["stage1_companyName"] || "",
+      product: formData["stage2_functionalRequirements"] || "",
+      currentStage: currentStage + 1,
+      formData,
+      savedStages: Array.from(savedStages),
+    };
+    try {
+      if (!backendOrderId) {
+        // Create new order
+        const res = await fetch(`${BACKEND_URL}/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setBackendOrderId(orderNumber);
+        }
+      } else {
+        // Update existing order
+        await fetch(`${BACKEND_URL}/orders/${backendOrderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+    } catch (err) {
+      // Optionally show error toast
+    }
     if (currentStage < 9) {
       setCurrentStage(currentStage + 1)
     }
@@ -216,6 +333,34 @@ export default function NewOrderPage() {
       return field.required ? value && value.trim() !== "" : true
     })
   }
+
+  const handleCompleteOrder = async () => {
+    try {
+      // First save the current stage without redirecting
+      await handleSaveAndExit(false);
+      
+      // Then call the complete order endpoint
+      const response = await fetch(`${BACKEND_URL}/complete-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: orderNumber }),
+      });
+      
+      if (response.ok) {
+        // Redirect to dashboard after successful completion
+        router.push("/");
+      } else {
+        const data = await response.json();
+        console.error("Failed to complete order:", data.error);
+        // Still redirect to dashboard even if complete order fails
+        router.push("/");
+      }
+    } catch (err) {
+      console.error("Error completing order:", err);
+      // Still redirect to dashboard even if there's an error
+      router.push("/");
+    }
+  };
 
   if (loading) {
     return (
@@ -244,7 +389,9 @@ export default function NewOrderPage() {
               {orderNumber}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold mb-2">New Order - Stage {currentStage}</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {orderId ? "Continue Order" : "New Order"} - Stage {currentStage}
+          </h1>
           <p className="text-muted-foreground">{currentStageData?.name}</p>
         </div>
 
@@ -334,7 +481,7 @@ export default function NewOrderPage() {
           </Button>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSaveAndExit}>
+            <Button variant="outline" onClick={() => handleSaveAndExit()}>
               <Save className="h-4 w-4 mr-2" />
               Save & Exit
             </Button>
@@ -346,10 +493,7 @@ export default function NewOrderPage() {
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  handleSaveAndExit()
-                  router.push("/")
-                }}
+                onClick={handleCompleteOrder}
                 disabled={!isCurrentStageComplete()}
                 className="bg-green-600 hover:bg-green-700"
               >

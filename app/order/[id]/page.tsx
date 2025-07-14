@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Calendar, Building, DollarSign, CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const mockOrderDetails = {
   id: "1",
@@ -18,7 +19,7 @@ const mockOrderDetails = {
   email: "john.smith@acmecorp.com",
   phone: "+1 (555) 123-4567",
   currentStage: 7,
-  status: "payment-pending",
+  status: "in-progress",
   dateInitiated: "2024-01-15",
   lastUpdated: "2024-01-20",
   paymentReceived: false,
@@ -51,11 +52,23 @@ const stageNames = [
 
 export default function OrderDetailsPage() {
   const params = useParams()
+  const { toast } = useToast();
   const [order] = useState(mockOrderDetails)
   const [paymentReceived, setPaymentReceived] = useState(order.paymentReceived)
 
   const progress = (order.currentStage / 9) * 100
   const completedStages = order.stageDetails.filter((stage) => stage.completed).length
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return date.toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -67,7 +80,7 @@ export default function OrderDetailsPage() {
         )
       case "payment-pending":
         return <Badge variant="destructive">Payment Pending</Badge>
-      case "pending":
+      case "in-progress":
         return <Badge variant="secondary">In Progress</Badge>
       default:
         return <Badge variant="outline">Unknown</Badge>
@@ -78,6 +91,24 @@ export default function OrderDetailsPage() {
     setPaymentReceived(true)
     // In a real app, this would update the database
   }
+
+  const handleCompleteOrder = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/complete-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.orderNumber }),
+      });
+      if (response.ok) {
+        toast({ title: "Order completed!", description: "A WhatsApp message was sent to the client." });
+      } else {
+        const data = await response.json();
+        toast({ title: "Error", description: data.error || "Failed to complete order." });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Network error. Could not complete order." });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +153,7 @@ export default function OrderDetailsPage() {
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{new Date(order.dateInitiated).toLocaleDateString()}</p>
+                      <p className="font-medium">{formatDate(order.dateInitiated)}</p>
                       <p className="text-sm text-muted-foreground">Date Initiated</p>
                     </div>
                   </div>
@@ -136,7 +167,7 @@ export default function OrderDetailsPage() {
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{new Date(order.estimatedCompletion).toLocaleDateString()}</p>
+                      <p className="font-medium">{formatDate(order.estimatedCompletion)}</p>
                       <p className="text-sm text-muted-foreground">Est. Completion</p>
                     </div>
                   </div>
@@ -278,7 +309,7 @@ export default function OrderDetailsPage() {
                   Send Update to Client
                 </Button>
                 {paymentReceived && order.currentStage === 9 && (
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Complete Order</Button>
+                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleCompleteOrder}>Complete Order</Button>
                 )}
               </CardContent>
             </Card>

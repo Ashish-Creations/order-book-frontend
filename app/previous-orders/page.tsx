@@ -15,7 +15,7 @@ interface Order {
   orderNumber: string
   companyName: string
   currentStage: number
-  status: "pending" | "completed" | "payment-pending"
+  status: "in-progress" | "payment-pending" | "completed"
   dateInitiated: string
   lastUpdated: string
   paymentReceived: boolean
@@ -23,72 +23,7 @@ interface Order {
 }
 
 const mockOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-2024-001",
-    companyName: "Acme Corp",
-    currentStage: 7,
-    status: "payment-pending",
-    dateInitiated: "2024-01-15",
-    lastUpdated: "2024-01-20",
-    paymentReceived: false,
-    totalValue: 25000,
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-2024-002",
-    companyName: "TechStart Inc",
-    currentStage: 4,
-    status: "pending",
-    dateInitiated: "2024-01-18",
-    lastUpdated: "2024-01-19",
-    paymentReceived: false,
-    totalValue: 15000,
-  },
-  {
-    id: "3",
-    orderNumber: "ORD-2024-003",
-    companyName: "Global Solutions",
-    currentStage: 9,
-    status: "completed",
-    dateInitiated: "2024-01-10",
-    lastUpdated: "2024-01-22",
-    paymentReceived: true,
-    totalValue: 45000,
-  },
-  {
-    id: "4",
-    orderNumber: "ORD-2024-004",
-    companyName: "Innovation Labs",
-    currentStage: 8,
-    status: "payment-pending",
-    dateInitiated: "2024-01-12",
-    lastUpdated: "2024-01-21",
-    paymentReceived: false,
-    totalValue: 32000,
-  },
-  {
-    id: "5",
-    orderNumber: "ORD-2023-045",
-    companyName: "Digital Dynamics",
-    currentStage: 9,
-    status: "completed",
-    dateInitiated: "2023-12-05",
-    lastUpdated: "2023-12-28",
-    paymentReceived: true,
-    totalValue: 28000,
-  },
-  {
-    id: "6",
-    orderNumber: "ORD-2023-044",
-    companyName: "Future Tech",
-    currentStage: 9,
-    status: "completed",
-    dateInitiated: "2023-11-20",
-    lastUpdated: "2023-12-15",
-    paymentReceived: true,
-    totalValue: 38000,
-  },
+  // Remove all mock orders - start with empty array
 ]
 
 const stageNames = [
@@ -110,9 +45,26 @@ export default function PreviousOrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("dateInitiated")
 
-  const years = Array.from(new Set(orders.map((order) => new Date(order.dateInitiated).getFullYear().toString()))).sort(
-    (a, b) => b.localeCompare(a),
-  )
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return date.toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const years = Array.from(new Set(orders.map((order) => {
+    try {
+      const date = new Date(order.dateInitiated);
+      if (isNaN(date.getTime())) return new Date().getFullYear().toString();
+      return date.getFullYear().toString();
+    } catch (error) {
+      return new Date().getFullYear().toString();
+    }
+  }))).sort((a, b) => b.localeCompare(a))
 
   const filteredAndSortedOrders = orders
     .filter((order) => {
@@ -120,14 +72,29 @@ export default function PreviousOrdersPage() {
         order.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesYear =
-        selectedYear === "all" || new Date(order.dateInitiated).getFullYear().toString() === selectedYear
+        selectedYear === "all" || (() => {
+          try {
+            const date = new Date(order.dateInitiated);
+            if (isNaN(date.getTime())) return false;
+            return date.getFullYear().toString() === selectedYear;
+          } catch (error) {
+            return false;
+          }
+        })()
       const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
       return matchesSearch && matchesYear && matchesStatus
     })
     .sort((a, b) => {
       switch (sortBy) {
         case "dateInitiated":
-          return new Date(b.dateInitiated).getTime() - new Date(a.dateInitiated).getTime()
+          try {
+            const dateA = new Date(a.dateInitiated);
+            const dateB = new Date(b.dateInitiated);
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
+            return dateB.getTime() - dateA.getTime();
+          } catch (error) {
+            return 0;
+          }
         case "companyName":
           return a.companyName.localeCompare(b.companyName)
         case "orderNumber":
@@ -149,7 +116,7 @@ export default function PreviousOrdersPage() {
         )
       case "payment-pending":
         return <Badge variant="destructive">Payment Pending</Badge>
-      case "pending":
+      case "in-progress":
         return <Badge variant="secondary">In Progress</Badge>
       default:
         return <Badge variant="outline">Unknown</Badge>
@@ -218,7 +185,7 @@ export default function PreviousOrdersPage() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="payment-pending">Payment Pending</SelectItem>
-                  <SelectItem value="pending">In Progress</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -336,10 +303,10 @@ export default function PreviousOrdersPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(order.dateInitiated).toLocaleDateString()}
+                            {formatDate(order.dateInitiated)}
                           </div>
                         </TableCell>
-                        <TableCell>{new Date(order.lastUpdated).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(order.lastUpdated)}</TableCell>
                         <TableCell className="font-medium">${order.totalValue.toLocaleString()}</TableCell>
                         <TableCell>
                           <Link href={`/order/${order.id}`}>

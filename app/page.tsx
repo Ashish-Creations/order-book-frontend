@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,54 +15,13 @@ interface Order {
   orderNumber: string
   companyName: string
   currentStage: number
-  status: "pending" | "completed" | "payment-pending"
+  status: "in-progress" | "payment-pending" | "completed"
   dateInitiated: string
   lastUpdated: string
   paymentReceived: boolean
 }
 
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-2024-001",
-    companyName: "Acme Corp",
-    currentStage: 7,
-    status: "payment-pending",
-    dateInitiated: "2024-01-15",
-    lastUpdated: "2024-01-20",
-    paymentReceived: false,
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-2024-002",
-    companyName: "TechStart Inc",
-    currentStage: 4,
-    status: "pending",
-    dateInitiated: "2024-01-18",
-    lastUpdated: "2024-01-19",
-    paymentReceived: false,
-  },
-  {
-    id: "3",
-    orderNumber: "ORD-2024-003",
-    companyName: "Global Solutions",
-    currentStage: 9,
-    status: "completed",
-    dateInitiated: "2024-01-10",
-    lastUpdated: "2024-01-22",
-    paymentReceived: true,
-  },
-  {
-    id: "4",
-    orderNumber: "ORD-2024-004",
-    companyName: "Innovation Labs",
-    currentStage: 8,
-    status: "payment-pending",
-    dateInitiated: "2024-01-12",
-    lastUpdated: "2024-01-21",
-    paymentReceived: false,
-  },
-]
+const BACKEND_URL = "http://localhost:8080";
 
 const stageNames = [
   "Inquiry",
@@ -77,19 +36,40 @@ const stageNames = [
 ]
 
 export default function HomePage() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [showAllOrders, setShowAllOrders] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const pendingOrders = orders.filter((order) => order.status === "pending" || order.status === "payment-pending")
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/orders`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched orders:", data.orders); // Debug log
+          console.log("Sample order dates:", data.orders?.[0]?.dateInitiated, data.orders?.[0]?.lastUpdated); // Debug log
+          setOrders(data.orders || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const pendingOrders = orders.filter((order) => order.status === "in-progress" || order.status === "payment-pending")
 
   const filteredOrders = showAllOrders
     ? orders
         .filter((order) => {
           const matchesSearch =
-            order.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
+            order.companyName ||
+            order.orderNumber
           const matchesYear =
             selectedYear === "all" || new Date(order.dateInitiated).getFullYear().toString() === selectedYear
           return matchesSearch && matchesYear
@@ -107,14 +87,33 @@ export default function HomePage() {
         )
       case "payment-pending":
         return <Badge variant="destructive">Payment Pending</Badge>
-      case "pending":
+      case "in-progress":
         return <Badge variant="secondary">In Progress</Badge>
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
   }
 
-  const years = Array.from(new Set(orders.map((order) => new Date(order.dateInitiated).getFullYear().toString())))
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return date.toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const years = Array.from(new Set(orders.map((order) => {
+    try {
+      const date = new Date(order.dateInitiated);
+      if (isNaN(date.getTime())) return new Date().getFullYear().toString();
+      return date.getFullYear().toString();
+    } catch (error) {
+      return new Date().getFullYear().toString();
+    }
+  })))
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,7 +210,13 @@ export default function HomePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Loading orders...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredOrders.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No orders found
@@ -237,12 +242,12 @@ export default function HomePage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(order.dateInitiated).toLocaleDateString()}
+                            {formatDate(order.dateInitiated)}
                           </div>
                         </TableCell>
-                        <TableCell>{new Date(order.lastUpdated).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(order.lastUpdated)}</TableCell>
                         <TableCell>
-                          <Link href={`/new-order?orderId=${order.id}`}>
+                          <Link href={`/new-order?orderId=${order.orderNumber}`}>
                             <Button variant="outline" size="sm">
                               Continue Order
                             </Button>
@@ -269,10 +274,10 @@ export default function HomePage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{orders.filter((o) => o.status === "pending").length}</div>
+              <div className="text-2xl font-bold">{orders.filter((o) => o.status === "in-progress").length}</div>
             </CardContent>
           </Card>
           <Card>
