@@ -7,8 +7,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Order Management Dashboard",
-  description: "Comprehensive order management system with 9-stage workflow",
-    generator: 'v0.dev'
+  description: "Comprehensive order management system with 9-stage workflow"
 }
 
 export default function RootLayout({
