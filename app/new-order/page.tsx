@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, ArrowRight, Save, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { BACKEND_URL } from "@/lib/config"
 
 const stageNames = [
   "Inquiry",
@@ -114,8 +115,6 @@ const stageFields = [
       : { ...field, required: false }
   )
 }));
-
-const BACKEND_URL = "http://localhost:8080";
 
 export default function NewOrderPage() {
   const router = useRouter()

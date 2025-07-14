@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Search, FileText, Calendar, Building } from "lucide-react"
+import { BACKEND_URL } from "@/lib/config"
 
 interface Order {
   id: string
@@ -20,8 +21,6 @@ interface Order {
   lastUpdated: string
   paymentReceived: boolean
 }
-
-const BACKEND_URL = "http://localhost:8080";
 
 const stageNames = [
   "Inquiry",

@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Calendar, Building, DollarSign, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { BACKEND_URL } from "@/lib/config"
 
 const mockOrderDetails = {
   id: "1",
@@ -94,7 +95,7 @@ export default function OrderDetailsPage() {
 
   const handleCompleteOrder = async () => {
     try {
-      const response = await fetch("http://localhost:8080/complete-order", {
+      const response = await fetch(`${BACKEND_URL}/complete-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: order.orderNumber }),
