@@ -1,49 +1,72 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Search, Calendar, Building, Filter, Download } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ArrowLeft,
+  Search,
+  Calendar,
+  Building,
+  Filter,
+  Download,
+} from "lucide-react";
 
 interface Order {
-  id: string
-  orderNumber: string
-  companyName: string
-  currentStage: number
-  status: "in-progress" | "payment-pending" | "completed"
-  dateInitiated: string
-  lastUpdated: string
-  paymentReceived: boolean
-  totalValue: number
+  id: string;
+  orderNumber: string;
+  companyName: string;
+  currentStage: number;
+  status: "in-progress" | "payment-pending" | "completed";
+  dateInitiated: string;
+  lastUpdated: string;
+  paymentReceived: boolean;
+  totalValue: number;
 }
 
 const mockOrders: Order[] = [
   // Remove all mock orders - start with empty array
-]
+];
 
 const stageNames = [
   "Inquiry",
   "Requirements Analysis",
   "Proposal",
-  "Contract Review",
   "Development Planning",
-  "Implementation",
-  "Testing",
-  "Deployment",
+  "Packaging & Dispatch",
   "Completion",
-]
+];
 
 export default function PreviousOrdersPage() {
-  const [orders] = useState<Order[]>(mockOrders)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedYear, setSelectedYear] = useState<string>("all")
-  const [selectedStatus, setSelectedStatus] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<string>("dateInitiated")
+  const [orders] = useState<Order[]>(mockOrders);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("dateInitiated");
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "N/A";
@@ -56,23 +79,28 @@ export default function PreviousOrdersPage() {
     }
   };
 
-  const years = Array.from(new Set(orders.map((order) => {
-    try {
-      const date = new Date(order.dateInitiated);
-      if (isNaN(date.getTime())) return new Date().getFullYear().toString();
-      return date.getFullYear().toString();
-    } catch (error) {
-      return new Date().getFullYear().toString();
-    }
-  }))).sort((a, b) => b.localeCompare(a))
+  const years = Array.from(
+    new Set(
+      orders.map((order) => {
+        try {
+          const date = new Date(order.dateInitiated);
+          if (isNaN(date.getTime())) return new Date().getFullYear().toString();
+          return date.getFullYear().toString();
+        } catch (error) {
+          return new Date().getFullYear().toString();
+        }
+      })
+    )
+  ).sort((a, b) => b.localeCompare(a));
 
   const filteredAndSortedOrders = orders
     .filter((order) => {
       const matchesSearch =
         order.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesYear =
-        selectedYear === "all" || (() => {
+        selectedYear === "all" ||
+        (() => {
           try {
             const date = new Date(order.dateInitiated);
             if (isNaN(date.getTime())) return false;
@@ -80,9 +108,10 @@ export default function PreviousOrdersPage() {
           } catch (error) {
             return false;
           }
-        })()
-      const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
-      return matchesSearch && matchesYear && matchesStatus
+        })();
+      const matchesStatus =
+        selectedStatus === "all" || order.status === selectedStatus;
+      return matchesSearch && matchesYear && matchesStatus;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -96,15 +125,15 @@ export default function PreviousOrdersPage() {
             return 0;
           }
         case "companyName":
-          return a.companyName.localeCompare(b.companyName)
+          return a.companyName.localeCompare(b.companyName);
         case "orderNumber":
-          return b.orderNumber.localeCompare(a.orderNumber)
+          return b.orderNumber.localeCompare(a.orderNumber);
         case "totalValue":
-          return b.totalValue - a.totalValue
+          return b.totalValue - a.totalValue;
         default:
-          return 0
+          return 0;
       }
-    })
+    });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -113,18 +142,23 @@ export default function PreviousOrdersPage() {
           <Badge variant="default" className="bg-green-500">
             Completed
           </Badge>
-        )
+        );
       case "payment-pending":
-        return <Badge variant="destructive">Payment Pending</Badge>
+        return <Badge variant="destructive">Payment Pending</Badge>;
       case "in-progress":
-        return <Badge variant="secondary">In Progress</Badge>
+        return <Badge variant="secondary">In Progress</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant="outline">Unknown</Badge>;
     }
-  }
+  };
 
-  const totalValue = filteredAndSortedOrders.reduce((sum, order) => sum + order.totalValue, 0)
-  const completedOrders = filteredAndSortedOrders.filter((order) => order.status === "completed")
+  const totalValue = filteredAndSortedOrders.reduce(
+    (sum, order) => sum + order.totalValue,
+    0
+  );
+  const completedOrders = filteredAndSortedOrders.filter(
+    (order) => order.status === "completed"
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,7 +174,9 @@ export default function PreviousOrdersPage() {
             </Link>
           </div>
           <h1 className="text-3xl font-bold mb-2">Previous Orders</h1>
-          <p className="text-muted-foreground">Search and filter all orders by company name, year, and status</p>
+          <p className="text-muted-foreground">
+            Search and filter all orders by company name, year, and status
+          </p>
         </div>
 
         {/* Filters */}
@@ -184,7 +220,9 @@ export default function PreviousOrdersPage() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="payment-pending">Payment Pending</SelectItem>
+                  <SelectItem value="payment-pending">
+                    Payment Pending
+                  </SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
                 </SelectContent>
               </Select>
@@ -208,15 +246,21 @@ export default function PreviousOrdersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Orders
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{filteredAndSortedOrders.length}</div>
+              <div className="text-2xl font-bold">
+                {filteredAndSortedOrders.length}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Completed Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Completed Orders
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{completedOrders.length}</div>
@@ -227,18 +271,24 @@ export default function PreviousOrdersPage() {
               <CardTitle className="text-sm font-medium">Total Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ${totalValue.toLocaleString()}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Avg Order Value
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 $
                 {filteredAndSortedOrders.length > 0
-                  ? Math.round(totalValue / filteredAndSortedOrders.length).toLocaleString()
+                  ? Math.round(
+                      totalValue / filteredAndSortedOrders.length
+                    ).toLocaleString()
                   : 0}
               </div>
             </CardContent>
@@ -251,7 +301,9 @@ export default function PreviousOrdersPage() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle>All Orders</CardTitle>
-                <CardDescription>{filteredAndSortedOrders.length} order(s) found</CardDescription>
+                <CardDescription>
+                  {filteredAndSortedOrders.length} order(s) found
+                </CardDescription>
               </div>
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
@@ -277,7 +329,10 @@ export default function PreviousOrdersPage() {
                 <TableBody>
                   {filteredAndSortedOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell
+                        colSpan={8}
+                        className="text-center py-8 text-muted-foreground"
+                      >
                         No orders found matching your criteria
                       </TableCell>
                     </TableRow>
@@ -295,8 +350,12 @@ export default function PreviousOrdersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium">Stage {order.currentStage}</span>
-                            <span className="text-sm text-muted-foreground">{stageNames[order.currentStage - 1]}</span>
+                            <span className="font-medium">
+                              Stage {order.currentStage}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {stageNames[order.currentStage - 1]}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
@@ -307,7 +366,9 @@ export default function PreviousOrdersPage() {
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(order.lastUpdated)}</TableCell>
-                        <TableCell className="font-medium">${order.totalValue.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">
+                          ${order.totalValue.toLocaleString()}
+                        </TableCell>
                         <TableCell>
                           <Link href={`/order/${order.id}`}>
                             <Button variant="outline" size="sm">
@@ -325,5 +386,5 @@ export default function PreviousOrdersPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

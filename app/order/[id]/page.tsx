@@ -1,16 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Calendar, Building, DollarSign, CheckCircle, Clock, AlertCircle } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { BACKEND_URL } from "@/lib/config"
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  ArrowLeft,
+  Calendar,
+  Building,
+  DollarSign,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { BACKEND_URL } from "@/lib/config";
 
 const mockOrderDetails = {
   id: "1",
@@ -19,7 +33,7 @@ const mockOrderDetails = {
   contactPerson: "John Smith",
   email: "john.smith@acmecorp.com",
   phone: "+1 (555) 123-4567",
-  currentStage: 7,
+  currentStage: 5,
   status: "in-progress",
   dateInitiated: "2024-01-15",
   lastUpdated: "2024-01-20",
@@ -28,37 +42,53 @@ const mockOrderDetails = {
   estimatedCompletion: "2024-02-15",
   stageDetails: [
     { stage: 1, name: "Inquiry", completed: true, completedDate: "2024-01-15" },
-    { stage: 2, name: "Requirements Analysis", completed: true, completedDate: "2024-01-16" },
-    { stage: 3, name: "Proposal", completed: true, completedDate: "2024-01-17" },
-    { stage: 4, name: "Contract Review", completed: true, completedDate: "2024-01-18" },
-    { stage: 5, name: "Development Planning", completed: true, completedDate: "2024-01-19" },
-    { stage: 6, name: "Implementation", completed: true, completedDate: "2024-01-20" },
-    { stage: 7, name: "Testing", completed: false, completedDate: null },
-    { stage: 8, name: "Deployment", completed: false, completedDate: null },
-    { stage: 9, name: "Completion", completed: false, completedDate: null },
+    {
+      stage: 2,
+      name: "Requirements Analysis",
+      completed: true,
+      completedDate: "2024-01-16",
+    },
+    {
+      stage: 3,
+      name: "Proposal",
+      completed: true,
+      completedDate: "2024-01-17",
+    },
+    {
+      stage: 4,
+      name: "Development Planning",
+      completed: true,
+      completedDate: "2024-01-19",
+    },
+    {
+      stage: 5,
+      name: "Packaging & Dispatch",
+      completed: true,
+      completedDate: "2024-01-20",
+    },
+    { stage: 6, name: "Completion", completed: false, completedDate: null },
   ],
-}
+};
 
 const stageNames = [
   "Inquiry",
   "Requirements Analysis",
   "Proposal",
-  "Contract Review",
   "Development Planning",
-  "Implementation",
-  "Testing",
-  "Deployment",
+  "Packaging & Dispatch",
   "Completion",
-]
+];
 
 export default function OrderDetailsPage() {
-  const params = useParams()
+  const params = useParams();
   const { toast } = useToast();
-  const [order] = useState(mockOrderDetails)
-  const [paymentReceived, setPaymentReceived] = useState(order.paymentReceived)
+  const [order] = useState(mockOrderDetails);
+  const [paymentReceived, setPaymentReceived] = useState(order.paymentReceived);
 
-  const progress = (order.currentStage / 9) * 100
-  const completedStages = order.stageDetails.filter((stage) => stage.completed).length
+  const progress = (order.currentStage / 6) * 100;
+  const completedStages = order.stageDetails.filter(
+    (stage) => stage.completed
+  ).length;
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "N/A";
@@ -78,20 +108,20 @@ export default function OrderDetailsPage() {
           <Badge variant="default" className="bg-green-500">
             Completed
           </Badge>
-        )
+        );
       case "payment-pending":
-        return <Badge variant="destructive">Payment Pending</Badge>
+        return <Badge variant="destructive">Payment Pending</Badge>;
       case "in-progress":
-        return <Badge variant="secondary">In Progress</Badge>
+        return <Badge variant="secondary">In Progress</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant="outline">Unknown</Badge>;
     }
-  }
+  };
 
   const handleMarkPaymentReceived = () => {
-    setPaymentReceived(true)
+    setPaymentReceived(true);
     // In a real app, this would update the database
-  }
+  };
 
   const handleCompleteOrder = async () => {
     try {
@@ -101,13 +131,22 @@ export default function OrderDetailsPage() {
         body: JSON.stringify({ orderId: order.orderNumber }),
       });
       if (response.ok) {
-        toast({ title: "Order completed!", description: "A WhatsApp message was sent to the client." });
+        toast({
+          title: "Order completed!",
+          description: "A WhatsApp message was sent to the client.",
+        });
       } else {
         const data = await response.json();
-        toast({ title: "Error", description: data.error || "Failed to complete order." });
+        toast({
+          title: "Error",
+          description: data.error || "Failed to complete order.",
+        });
       }
     } catch (err) {
-      toast({ title: "Error", description: "Network error. Could not complete order." });
+      toast({
+        title: "Error",
+        description: "Network error. Could not complete order.",
+      });
     }
   };
 
@@ -128,7 +167,9 @@ export default function OrderDetailsPage() {
             </Badge>
           </div>
           <h1 className="text-3xl font-bold mb-2">Order Details</h1>
-          <p className="text-muted-foreground">Complete order information and progress tracking</p>
+          <p className="text-muted-foreground">
+            Complete order information and progress tracking
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -154,22 +195,34 @@ export default function OrderDetailsPage() {
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{formatDate(order.dateInitiated)}</p>
-                      <p className="text-sm text-muted-foreground">Date Initiated</p>
+                      <p className="font-medium">
+                        {formatDate(order.dateInitiated)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Date Initiated
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <DollarSign className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">${order.totalValue.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">Total Value</p>
+                      <p className="font-medium">
+                        ${order.totalValue.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Value
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{formatDate(order.estimatedCompletion)}</p>
-                      <p className="text-sm text-muted-foreground">Est. Completion</p>
+                      <p className="font-medium">
+                        {formatDate(order.estimatedCompletion)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Est. Completion
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -181,25 +234,33 @@ export default function OrderDetailsPage() {
               <CardHeader>
                 <CardTitle>Progress Tracking</CardTitle>
                 <CardDescription>
-                  Stage {order.currentStage} of 9 - {completedStages} stages completed
+                  Stage {order.currentStage} of 6 - {completedStages} stages
+                  completed
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Progress value={progress} className="mb-6" />
                 <div className="space-y-3">
                   {order.stageDetails.map((stage, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             stage.completed
                               ? "bg-green-500 text-white"
                               : index + 1 === order.currentStage
-                                ? "bg-blue-500 text-white"
-                                : "bg-muted text-muted-foreground"
+                              ? "bg-blue-500 text-white"
+                              : "bg-muted text-muted-foreground"
                           }`}
                         >
-                          {stage.completed ? <CheckCircle className="h-4 w-4" /> : index + 1}
+                          {stage.completed ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : (
+                            index + 1
+                          )}
                         </div>
                         <div>
                           <p className="font-medium">
@@ -207,7 +268,10 @@ export default function OrderDetailsPage() {
                           </p>
                           {stage.completed && stage.completedDate && (
                             <p className="text-sm text-muted-foreground">
-                              Completed on {new Date(stage.completedDate).toLocaleDateString()}
+                              Completed on{" "}
+                              {new Date(
+                                stage.completedDate
+                              ).toLocaleDateString()}
                             </p>
                           )}
                         </div>
@@ -238,7 +302,9 @@ export default function OrderDetailsPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="font-medium">{order.contactPerson}</p>
-                  <p className="text-sm text-muted-foreground">Contact Person</p>
+                  <p className="text-sm text-muted-foreground">
+                    Contact Person
+                  </p>
                 </div>
                 <Separator />
                 <div>
@@ -269,17 +335,28 @@ export default function OrderDetailsPage() {
                 {paymentReceived ? (
                   <div className="text-center py-4">
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <p className="font-medium text-green-700">Payment Received</p>
-                    <p className="text-sm text-muted-foreground">Order can be completed</p>
+                    <p className="font-medium text-green-700">
+                      Payment Received
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Order can be completed
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="text-center py-4">
                       <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-2" />
-                      <p className="font-medium text-orange-700">Payment Pending</p>
-                      <p className="text-sm text-muted-foreground">Amount: ${order.totalValue.toLocaleString()}</p>
+                      <p className="font-medium text-orange-700">
+                        Payment Pending
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Amount: ${order.totalValue.toLocaleString()}
+                      </p>
                     </div>
-                    <Button onClick={handleMarkPaymentReceived} className="w-full">
+                    <Button
+                      onClick={handleMarkPaymentReceived}
+                      className="w-full"
+                    >
                       Mark Payment as Received
                     </Button>
                   </div>
@@ -296,7 +373,9 @@ export default function OrderDetailsPage() {
                 <Button
                   variant="default"
                   className="w-full"
-                  onClick={() => (window.location.href = `/new-order?orderId=${params.id}`)}
+                  onClick={() =>
+                    (window.location.href = `/new-order?orderId=${params.id}`)
+                  }
                 >
                   Continue Order
                 </Button>
@@ -309,8 +388,13 @@ export default function OrderDetailsPage() {
                 <Button variant="outline" className="w-full">
                   Send Update to Client
                 </Button>
-                {paymentReceived && order.currentStage === 9 && (
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleCompleteOrder}>Complete Order</Button>
+                {paymentReceived && order.currentStage === 6 && (
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={handleCompleteOrder}
+                  >
+                    Complete Order
+                  </Button>
                 )}
               </CardContent>
             </Card>
@@ -318,5 +402,5 @@ export default function OrderDetailsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
